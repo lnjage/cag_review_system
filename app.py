@@ -1,16 +1,13 @@
-from flask import Flask, render_template, redirect, request, url_for, session
+from flask import Flask, render_template, redirect, url_for, request
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from models import db, User, Abstract, Review
-import os
+from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.urandom(24)  # Use a random secret key for session management
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///reviews.db'  # Path to our database
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disables a feature we don’t need
+app.config['SECRET_KEY'] = 'mysecretkey'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 
 # Initialize the database
-db.init_app(app)
+db = SQLAlchemy(app)
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -22,21 +19,24 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Handle get and post requests Route to the login page,
+@app.route('/')
+def home():
+    return redirect(url_for('login')) 
+
+# Route to the login page
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         
-        user = User.query.filter_by(username=username).first()  # Find user by username
+        user = User.query.filter_by(username=username).first()
         
-        # Check if user exists and password matches (password checking is simplified here)
-        if user and user.password == password:
-            login_user(user)  # Log the user in
-            return redirect(url_for('dashboard'))  # Redirect to dashboard if successful
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('dashboard'))
         else:
-            return 'Invalid credentials', 401  # Return error if credentials are wrong
+            return 'Invalid credentials', 401
     
     return render_template('login.html')
 
@@ -50,9 +50,8 @@ def dashboard():
 @app.route('/logout')
 @login_required
 def logout():
-    logout_user()  # Log out the user
-    return redirect(url_for('login'))  # Redirect to login page after logout
+    logout_user()
+    return redirect(url_for('login'))
 
-# Running the app
 if __name__ == '__main__':
     app.run(debug=True)
