@@ -12,6 +12,7 @@ def load_abstracts_from_csv(csv_file):
                 email=row['email'],
                 title=row['title'],
                 subject=row['subject'],
+                
                 content=row['content']
             )
             db.session.add(abstract)

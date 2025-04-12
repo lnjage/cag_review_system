@@ -1,4 +1,4 @@
-from . import db
+from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -24,6 +24,9 @@ class Abstract(db.Model):
     subject = db.Column(db.String(150), nullable=False)
     content = db.Column(db.String(500), nullable=False)
 
+    def __repr__(self):
+        return f'<Abstract {self.title}>'
+
 class Review(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     abstract_id = db.Column(db.Integer, db.ForeignKey('abstract.id'), nullable=False)
@@ -33,3 +36,6 @@ class Review(db.Model):
 
     user = db.relationship('User', backref='reviews')
     abstract = db.relationship('Abstract', backref='reviews')
+
+    def __repr__(self):
+        return f'<Review {self.score} for Abstract {self.abstract_id} by User {self.reviewer_id}>'
